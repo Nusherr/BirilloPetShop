@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Birillo Pet Shop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green: #2A623D;
+      --dark-green: #133A2C;
+      --yellow: #F4C542;
+      --beige: #EFE9DC;
+      --white: #FAF8F2;
+      --orange: #E4572E;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--white);
+      color: var(--dark-green);
+    }
+
+    header {
+      background-color: var(--green);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header nav a {
+      color: white;
+      margin: 0 1rem;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .hero {
+      background-color: var(--green);
+      color: white;
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .hero button {
+      background-color: var(--yellow);
+      border: none;
+      padding: 1rem 2rem;
+      font-weight: 600;
+      color: var(--dark-green);
+      cursor: pointer;
+    }
+
+    .section {
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .products, .categories, .offers {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background-color: var(--beige);
+      padding: 1rem;
+      border-radius: 10px;
+      width: 200px;
+    }
+
+    footer {
+      background-color: var(--dark-green);
+      color: var(--white);
+      padding: 2rem;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .footer-column {
+      margin: 1rem;
+      min-width: 250px;
+    }
+
+    iframe {
+      border: 0;
+      width: 100%;
+      height: 200px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div><strong>Birillo Pet Shop</strong></div>
+    <nav>
+      <a href="#">Cani</a>
+      <a href="#">Gatti</a>
+      <a href="#">Offerte</a>
+      <a href="#">Contatti</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>SCONTI FINO AL 30%</h1>
+    <p>Su una selezione di prodotti</p>
+    <button>SCOPRI LE OFFERTE</button>
+  </section>
+
+  <section class="section">
+    <h2>Prodotti in evidenza</h2>
+    <div class="products">
+      <div class="card">Prodotto 1</div>
+      <div class="card">Prodotto 2</div>
+      <div class="card">Prodotto 3</div>
+      <div class="card">Prodotto 4</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Acquista per categoria</h2>
+    <div class="categories">
+      <div class="card">🐶 Cani</div>
+      <div class="card">🐱 Gatti</div>
+      <div class="card">🐰 Altri animali</div>
+      <div class="card">🍽️ Mangime</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Offerte del momento</h2>
+    <div class="offers">
+      <div class="card">Offerta 1</div>
+      <div class="card">Offerta 2</div>
+      <div class="card">Offerta 3</div>
+    </div>
+  </section>
+
+  <section class="section" style="background-color: var(--yellow);">
+    <strong>SPEDIZIONE GRATUITA PER ORDINI SUPERIORI A 50€</strong>
+  </section>
+
+  <footer>
+    <div class="footer-column">
+      <h3>Birillo Pet Shop</h3>
+      <p>Via Po 26/28, Piazza Aldo Moro<br>64100 Teramo (TE)</p>
+      <p><a href="https://maps.app.goo.gl/DrhUGdHfiZJqC7YK8" style="color: var(--white);">Visualizza su Google Maps</a></p>
+    </div>
+    <div class="footer-column">
+      <p>📞 0861 210515<br>📧 birillopetshop@gmail.com</p>
+      <p><a href="https://www.instagram.com/birillopetshop/" style="color: var(--white);">Instagram</a></p>
+      <p><a href="https://www.facebook.com/p/Birillo-Pet-shop-61551802680339/" style="color: var(--white);">Facebook</a></p>
+    </div>
+    <div class="footer-column">
+      <iframe src="https://maps.google.com/maps?q=Via%20Po%2026%2F28,%20Teramo&t=&z=15&ie=UTF8&iwloc=&output=embed"></iframe>
+    </div>
+  </footer>
+</body>
+</html>
