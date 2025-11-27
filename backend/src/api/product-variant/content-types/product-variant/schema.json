@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "product_variants",
+  "info": {
+    "singularName": "product-variant",
+    "pluralName": "product-variants",
+    "displayName": "ProductVariant"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nome_variante": {
+      "type": "string"
+    },
+    "prezzo_aggiuntivo": {
+      "type": "decimal"
+    },
+    "opzioni": {
+      "type": "json"
+    },
+    "peso_kg": {
+      "type": "decimal"
+    },
+    "prezzo_scontato": {
+      "type": "decimal"
+    }
+  }
+}
