@@ -1,0 +1,7 @@
+{
+  "name": "BirilloPetShop",
+  "description": "Una piattaforma e-commerce ibrida e amichevole per forniture per animali domestici e servizi professionali di acquariologia.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
