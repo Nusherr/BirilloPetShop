@@ -21,7 +21,7 @@ export default [
   {
     name: 'strapi::cors',
     config: {
-      origin: ['http://localhost:3000', 'http://localhost:1337', 'http://localhost:5173', 'http://192.168.1.7:3000'],
+      origin: ['http://localhost:3000', 'http://localhost:1337', 'http://localhost:5173', 'http://192.168.1.7:3000', process.env.FRONTEND_URL].filter(Boolean),
       headers: ['*'],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
     },
