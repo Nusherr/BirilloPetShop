@@ -22,4 +22,4 @@ const getEnvVar = (key: string, fallback: string): string => {
   return fallback;
 };
 
-export const STRAPI_API_URL = getEnvVar('VITE_STRAPI_URL', 'http://localhost:1337/api');
+export const STRAPI_API_URL = getEnvVar('VITE_API_URL', 'http://localhost:1337') + '/api';
