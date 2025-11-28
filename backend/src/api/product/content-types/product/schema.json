@@ -31,6 +31,14 @@
       "type": "boolean",
       "default": false
     },
+    "stock": {
+      "type": "integer",
+      "default": 0
+    },
+    "barcode": {
+      "type": "string",
+      "unique": true
+    },
     "immagine": {
       "type": "media",
       "multiple": false,

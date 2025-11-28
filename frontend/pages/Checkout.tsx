@@ -115,6 +115,7 @@ export const Checkout: React.FC = () => {
             quantity: item.quantity,
             price: (item.attributes.prezzo_scontato || item.attributes.prezzo) + (item.selectedVariant?.attributes.prezzo_aggiuntivo || 0),
             variant: item.selectedVariant?.attributes.nome_variante,
+            variant_id: item.selectedVariant?.id,
             is_service: item.attributes.is_service,
             service_date: item.serviceDate,
             service_notes: item.serviceNotes

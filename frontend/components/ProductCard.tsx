@@ -121,7 +121,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
               <div className="flex items-center gap-2">
                 {/* Inline Quantity Selector */}
-                {!is_service && !hasVariants && (
+                {!is_service && !hasVariants && (product.attributes.stock || 0) > 0 && (
                   <div className="flex items-center bg-stone-100 rounded-full h-9 px-1 shadow-inner border border-stone-200" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={(e) => adjustQuantity(e, -1)}
@@ -132,21 +132,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     <button
                       onClick={(e) => adjustQuantity(e, 1)}
                       className="w-6 h-full flex items-center justify-center text-stone-500 hover:text-nature-600 font-bold"
+                      disabled={quantity >= (product.attributes.stock || 99)}
                     >+</button>
                   </div>
                 )}
 
                 <button
                   onClick={handleAddClick}
+                  disabled={!is_service && !hasVariants && (product.attributes.stock || 0) <= 0}
                   className={`h-10 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 
-                    ${is_service
-                      ? 'w-10 bg-ocean-500 text-white hover:bg-ocean-600'
-                      : 'bg-nature-600 text-white hover:bg-nature-700'
+                    ${(!is_service && !hasVariants && (product.attributes.stock || 0) <= 0)
+                      ? 'bg-stone-300 text-stone-500 cursor-not-allowed px-4 w-auto'
+                      : is_service
+                        ? 'w-10 bg-ocean-500 text-white hover:bg-ocean-600'
+                        : 'bg-nature-600 text-white hover:bg-nature-700'
                     } ${hasVariants ? 'px-4 text-sm font-bold' : 'w-10'}
                   `}
                   aria-label="Aggiungi al carrello"
                 >
-                  {hasVariants ? (
+                  {(!is_service && !hasVariants && (product.attributes.stock || 0) <= 0) ? (
+                    <span className="text-xs font-bold uppercase">Esaurito</span>
+                  ) : hasVariants ? (
                     <>Scegli <ChevronRight size={14} className="ml-1" /></>
                   ) : (
                     is_service ? <Calendar size={18} /> : <Plus size={22} strokeWidth={2.5} />

@@ -25,6 +25,14 @@
     },
     "prezzo_scontato": {
       "type": "decimal"
+    },
+    "stock": {
+      "type": "integer",
+      "default": 0
+    },
+    "barcode": {
+      "type": "string",
+      "unique": true
     }
   }
 }

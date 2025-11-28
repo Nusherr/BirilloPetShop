@@ -203,3 +203,39 @@ export const fetchAnimals = async (): Promise<string[]> => {
     return [];
   }
 };
+
+export const scanBarcode = async (barcode: string) => {
+  try {
+    const response = await fetch(`${STRAPI_API_URL}/inventory/scan`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ barcode }),
+    });
+
+    const json = await response.json();
+    if (!response.ok) {
+      throw new Error(json.error?.message || 'Scan failed');
+    }
+    return json;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const lookupProductByBarcode = async (barcode: string) => {
+  try {
+    const response = await fetch(`${STRAPI_API_URL}/inventory/lookup/${barcode}`);
+    const json = await response.json();
+
+    if (!response.ok) {
+      // If 404, just return null, don't throw
+      if (response.status === 404) return null;
+      throw new Error(json.error?.message || 'Lookup failed');
+    }
+    return json;
+  } catch (error) {
+    throw error;
+  }
+};

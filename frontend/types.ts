@@ -33,6 +33,8 @@ export interface ProductVariant {
     peso_kg?: number;
     prezzo_scontato?: number;
     opzioni?: Record<string, any>;
+    stock?: number;
+    barcode?: string;
   }
 }
 
@@ -52,6 +54,8 @@ export interface Product {
     immagine: string;
     galleria?: string[];
     variants?: ProductVariant[];
+    stock?: number;
+    barcode?: string;
   }
 }
 

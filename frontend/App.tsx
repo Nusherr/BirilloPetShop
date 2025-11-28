@@ -12,6 +12,7 @@ import { Login } from './pages/Login';
 import { Account } from './pages/Account';
 import { Services } from './pages/Services';
 import { Success } from './pages/Success';
+import POS from './pages/POS';
 
 import { EmailConfirmation } from './pages/EmailConfirmation';
 import { ResetPassword } from './pages/ResetPassword';
@@ -33,6 +34,7 @@ const App: React.FC = () => {
               <Route path="/account" element={<Account />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/success" element={<Success />} />
+              <Route path="/pos" element={<POS />} />
             </Routes>
           </HashRouter>
         </WishlistProvider>

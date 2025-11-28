@@ -66,15 +66,41 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
         }
 
         try {
+            // 0. Validate Stock Availability
+            for (const item of cart_snapshot) {
+                // Skip services
+                if (item.is_service) continue;
+
+                let availableStock = 0;
+                let productName = item.name;
+
+                if (item.variant_id) {
+                    // Check Variant Stock
+                    const variant = await strapi.entityService.findOne('api::product-variant.product-variant', item.variant_id);
+                    if (!variant) throw new Error(`Variante non trovata: ${item.variant} (${item.name})`);
+                    availableStock = variant.stock ?? 0;
+                    productName = `${item.name} (${item.variant})`;
+                } else {
+                    // Check Product Stock
+                    const product = await strapi.entityService.findOne('api::product.product', item.id);
+                    if (!product) throw new Error(`Prodotto non trovato: ${item.name}`);
+                    availableStock = product.stock ?? 0;
+                }
+
+                if (availableStock < item.quantity) {
+                    return ctx.badRequest(`Stock insufficiente per ${productName}. Disponibili: ${availableStock}, Richiesti: ${item.quantity}`);
+                }
+            }
+
             // 1. Calculate Line Items for Stripe
             const lineItems = cart_snapshot.map((item) => ({
                 price_data: {
                     currency: 'eur',
                     product_data: {
-                        name: item.name,
-                        images: item.image ? [item.image] : [], // Assuming image url is in snapshot if available, otherwise empty
+                        name: item.name + (item.variant ? ` (${item.variant})` : ''),
+                        images: item.image ? [item.image] : [],
                     },
-                    unit_amount: Math.round((item.price) * 100), // Price in cents
+                    unit_amount: Math.round((item.price) * 100),
                 },
                 quantity: item.quantity,
             }));
@@ -83,7 +109,7 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
             const itemsTotal = cart_snapshot.reduce((acc, item) => acc + (item.price * item.quantity), 0);
             const shippingCost = total_paid - itemsTotal;
 
-            if (shippingCost > 0.01) { // Tolerance for float errors
+            if (shippingCost > 0.01) {
                 lineItems.push({
                     price_data: {
                         currency: 'eur',
@@ -107,6 +133,7 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
                 metadata: {
                     userId: user.id,
                     shipping_address: JSON.stringify(shipping_details),
+                    cart_snapshot: JSON.stringify(cart_snapshot) // Store snapshot in metadata for webhook access if needed
                 },
             });
 
@@ -124,29 +151,17 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
 
             return { stripeSessionId: session.id, url: session.url, id: newOrder.id };
 
-        } catch (error) {
-            console.error('Stripe Error:', error);
-            return ctx.badRequest('Errore durante la creazione della sessione di pagamento', { error });
+        } catch (error: any) {
+            console.error('Order Creation Error:', error);
+            return ctx.badRequest(error.message || 'Errore durante la creazione dell\'ordine');
         }
     },
+
     async webhook(ctx) {
         const stripeSignature = ctx.request.headers['stripe-signature'];
         let event;
 
-        // In a real production environment with a raw body parser available:
-        // try {
-        //   event = stripe.webhooks.constructEvent(
-        //     ctx.request.body[Symbol.for('unparsedBody')], // or however raw body is accessed
-        //     stripeSignature,
-        //     process.env.STRIPE_WEBHOOK_SECRET
-        //   );
-        // } catch (err) {
-        //   return ctx.badRequest(`Webhook Error: ${err.message}`);
-        // }
-
-        // For this local setup/MVP without raw body middleware:
-        // We trust the body provided it matches the structure we expect.
-        // SECURITY WARNING: This is not secure for production without signature verification.
+        // In production, verify signature here
         event = ctx.request.body;
 
         if (event.type === 'checkout.session.completed') {
@@ -154,21 +169,53 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
             const stripeId = session.id;
 
             try {
-                // Find the order with this stripe_id
-                // Note: We use findMany because findOne usually requires ID, and we are searching by a field
                 const orders = await strapi.entityService.findMany('api::order.order', {
                     filters: { stripe_id: stripeId },
                 });
 
                 if (orders && orders.length > 0) {
                     const order = orders[0];
-                    // Update status to 'Pagato'
+
+                    // Update status
                     await strapi.entityService.update('api::order.order', order.id, {
-                        data: {
-                            stato: 'Pagato',
-                        },
+                        data: { stato: 'Pagato' },
                     });
-                    console.log(`Order ${order.id} updated to Pagato`);
+
+                    // DECREMENT STOCK
+                    const cartItems = order.cart_snapshot as any[];
+                    if (cartItems && Array.isArray(cartItems)) {
+                        for (const item of cartItems) {
+                            if (item.is_service) continue;
+
+                            try {
+                                if (item.variant_id) {
+                                    // Decrement Variant
+                                    const variant = await strapi.entityService.findOne('api::product-variant.product-variant', item.variant_id);
+                                    if (variant) {
+                                        const newStock = Math.max(0, (variant.stock || 0) - item.quantity);
+                                        await strapi.entityService.update('api::product-variant.product-variant', item.variant_id, {
+                                            data: { stock: newStock }
+                                        });
+                                        console.log(`Decremented stock for variant ${variant.id}: ${variant.stock} -> ${newStock}`);
+                                    }
+                                } else {
+                                    // Decrement Product
+                                    const product = await strapi.entityService.findOne('api::product.product', item.id);
+                                    if (product) {
+                                        const newStock = Math.max(0, (product.stock || 0) - item.quantity);
+                                        await strapi.entityService.update('api::product.product', item.id, {
+                                            data: { stock: newStock }
+                                        });
+                                        console.log(`Decremented stock for product ${product.id}: ${product.stock} -> ${newStock}`);
+                                    }
+                                }
+                            } catch (err) {
+                                console.error(`Failed to decrement stock for item ${item.name}`, err);
+                            }
+                        }
+                    }
+
+                    console.log(`Order ${order.id} processed successfully`);
                 } else {
                     console.warn(`No order found for Stripe Session ${stripeId}`);
                 }

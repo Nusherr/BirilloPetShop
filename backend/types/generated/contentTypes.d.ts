@@ -533,6 +533,7 @@ export interface ApiProductVariantProductVariant
     draftAndPublish: true;
   };
   attributes: {
+    barcode: Schema.Attribute.String & Schema.Attribute.Unique;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -548,6 +549,7 @@ export interface ApiProductVariantProductVariant
     prezzo_aggiuntivo: Schema.Attribute.Decimal;
     prezzo_scontato: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
+    stock: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -566,6 +568,7 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
   };
   attributes: {
     animal: Schema.Attribute.Relation<'oneToOne', 'api::animal.animal'>;
+    barcode: Schema.Attribute.String & Schema.Attribute.Unique;
     category: Schema.Attribute.Relation<'oneToOne', 'api::category.category'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -588,6 +591,7 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
     prezzo: Schema.Attribute.Decimal;
     prezzo_scontato: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
+    stock: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
