@@ -69,10 +69,10 @@
       "relation": "oneToOne",
       "target": "api::animal.animal"
     },
-    "varianti_prodotto": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::product-variant.product-variant"
+    "varianti": {
+      "type": "component",
+      "repeatable": true,
+      "component": "product.variant"
     }
   }
 }

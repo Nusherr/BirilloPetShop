@@ -78,6 +78,7 @@ const mapStrapiProduct = (item: any): Product => {
     }
 
     // Variants
+    // populate: ['immagine', 'category', 'animal', 'varianti'],
     // v5: data.varianti_prodotto is array
     // v4: data.varianti_prodotto.data is array
     let variantsRaw = [];
@@ -85,22 +86,20 @@ const mapStrapiProduct = (item: any): Product => {
       variantsRaw = Array.isArray(data.varianti_prodotto) ? data.varianti_prodotto : (data.varianti_prodotto.data || []);
     } else if (data.product_variants) {
       variantsRaw = Array.isArray(data.product_variants) ? data.product_variants : (data.product_variants.data || []);
+    } else if (data.varianti) { // Added to handle 'varianti' component directly
+      variantsRaw = Array.isArray(data.varianti) ? data.varianti : (data.varianti.data || []);
     }
 
-    const variants = variantsRaw.map((v: any) => {
-      // v5 variant is flat, v4 is nested
-      const vData = v.attributes || v;
-      return {
-        id: Number(v.id),
-        attributes: {
-          nome_variante: vData.nome_variante || 'Variante',
-          prezzo_aggiuntivo: Number(vData.prezzo_aggiuntivo) || 0,
-          peso_kg: vData.peso_kg ? Number(vData.peso_kg) : undefined,
-          prezzo_scontato: vData.prezzo_scontato ? Number(vData.prezzo_scontato) : undefined,
-          opzioni: vData.opzioni || {}
-        }
-      };
-    });
+    const variants = variantsRaw.map((v: any) => ({
+      id: v.id,
+      nome_variante: v.nome_variante || v.attributes?.nome_variante || 'Variante',
+      prezzo: Number(v.prezzo || v.prezzo_aggiuntivo || v.attributes?.prezzo || v.attributes?.prezzo_aggiuntivo || 0),
+      peso_kg: Number(v.peso_kg || v.attributes?.peso_kg || 0),
+      prezzo_scontato: Number(v.prezzo_scontato || v.attributes?.prezzo_scontato || 0),
+      opzioni: v.opzioni || v.attributes?.opzioni || {},
+      stock: Number(v.stock || v.attributes?.stock || 0),
+      barcode: v.barcode || v.attributes?.barcode
+    }));
 
     return {
       id: Number(id),
@@ -115,7 +114,7 @@ const mapStrapiProduct = (item: any): Product => {
         is_featured: Boolean(data.is_featured),
         immagine: getImageUrl(data.immagine),
         galleria: getGalleryUrls(data.galleria),
-        variants: variants
+        varianti: variants,
       }
     };
   } catch (e) {

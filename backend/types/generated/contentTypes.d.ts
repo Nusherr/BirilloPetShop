@@ -595,10 +595,7 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    varianti_prodotto: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::product-variant.product-variant'
-    >;
+    varianti: Schema.Attribute.Component<'product.variant', true>;
   };
 }
 

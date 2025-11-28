@@ -19,22 +19,49 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     return null;
   }
 
-  const { nome, prezzo, prezzo_scontato, categoria, is_service, immagine, variants } = product.attributes;
+  const { nome, prezzo, prezzo_scontato, categoria, is_service, immagine, varianti } = product.attributes;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
   const isSaved = isInWishlist(product.id);
-  const hasVariants = variants && variants.length > 0;
-  const isOnSale = prezzo_scontato && prezzo_scontato < prezzo;
+  const hasVariants = varianti && varianti.length > 0;
+
+  // Calculate Cheapest Variant (if applicable)
+  const cheapestVariant = hasVariants ? [...varianti].sort((a, b) => {
+    const priceA = (a.prezzo_scontato && a.prezzo_scontato < a.prezzo) ? a.prezzo_scontato : a.prezzo;
+    const priceB = (b.prezzo_scontato && b.prezzo_scontato < b.prezzo) ? b.prezzo_scontato : b.prezzo;
+    return priceA - priceB;
+  })[0] : null;
+
+  // Determine effective prices and sale status
+  let displayPrice = prezzo;
+  let displaySalePrice = prezzo_scontato;
+  let isItemOnSale = false;
+
+  if (hasVariants && cheapestVariant) {
+    displayPrice = cheapestVariant.prezzo;
+    displaySalePrice = cheapestVariant.prezzo_scontato;
+    isItemOnSale = !!(displaySalePrice && displaySalePrice < displayPrice);
+  } else {
+    isItemOnSale = !!(prezzo_scontato && prezzo_scontato < prezzo);
+  }
 
   // Calculate discount percentage
-  const discountPercent = isOnSale ? Math.round(((prezzo - prezzo_scontato) / prezzo) * 100) : 0;
+  const discountPercent = isItemOnSale && displaySalePrice
+    ? Math.round(((displayPrice - displaySalePrice) / displayPrice) * 100)
+    : 0;
+
+  // Calculate Stock Status
+  // If has variants, check if ANY variant has stock
+  const totalStock = hasVariants
+    ? varianti.reduce((acc, v) => acc + (v.stock || 0), 0)
+    : (product.attributes.stock || 0);
+
+  const isOutOfStock = !is_service && totalStock <= 0;
 
   const handleAddClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log("Add Clicked", { hasVariants, product });
     if (hasVariants) {
-      console.log("Opening Modal");
       setIsModalOpen(true);
     } else {
       addToCart(product, quantity);
@@ -65,7 +92,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </button>
 
         {/* Sale Badge - Uses Birillo Red as accent */}
-        {isOnSale && (
+        {isItemOnSale && (
           <div className="absolute top-3 left-3 z-10 bg-birillo-red text-white text-xs font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-md animate-fade-in">
             <Tag size={12} fill="currentColor" /> -{discountPercent}%
           </div>
@@ -98,30 +125,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <div className="mt-auto pt-4 border-t border-stone-50">
             <div className="flex items-center justify-between gap-2">
               <div className="flex flex-col">
-                {isOnSale ? (
+                {isItemOnSale ? (
                   <div className="flex flex-col items-start">
-                    <span className="text-xs text-stone-400 line-through decoration-red-300 decoration-1">€{prezzo.toFixed(2)}</span>
-                    <span className="text-xl font-extrabold text-birillo-red">€{prezzo_scontato.toFixed(2)}</span>
+                    {hasVariants && <span className="text-[10px] text-stone-400 uppercase font-bold">A partire da</span>}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-stone-400 line-through decoration-red-300 decoration-1">€{displayPrice.toFixed(2)}</span>
+                      <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-md">-{discountPercent}%</span>
+                    </div>
+                    <span className="text-xl font-extrabold text-birillo-red">€{displaySalePrice!.toFixed(2)}</span>
                   </div>
                 ) : (
-                  // If price is 0 and has variants, show "Vedi Opzioni" or min price
-                  (prezzo === 0 && hasVariants) ? (
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-stone-400 uppercase font-bold">A partire da</span>
-                      <span className="text-lg font-extrabold text-nature-700">
-                        €{Math.min(...variants.map(v => v.attributes.prezzo_aggiuntivo)).toFixed(2)}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-xl font-extrabold text-nature-700">€{prezzo.toFixed(2)}</span>
-                  )
+                  <div className="flex flex-col">
+                    {hasVariants && <span className="text-[10px] text-stone-400 uppercase font-bold">A partire da</span>}
+                    <span className="text-xl font-extrabold text-nature-700">€{displayPrice.toFixed(2)}</span>
+                  </div>
                 )}
-                {hasVariants && prezzo > 0 && <span className="text-[10px] font-bold text-nature-600 uppercase bg-nature-50 px-1.5 py-0.5 rounded-sm w-fit mt-0.5">+ opzioni</span>}
+                {hasVariants && <span className="text-[10px] font-bold text-nature-600 uppercase bg-nature-50 px-1.5 py-0.5 rounded-sm w-fit mt-0.5">+ opzioni</span>}
               </div>
 
               <div className="flex items-center gap-2">
                 {/* Inline Quantity Selector */}
-                {!is_service && !hasVariants && (product.attributes.stock || 0) > 0 && (
+                {!is_service && !hasVariants && !isOutOfStock && (
                   <div className="flex items-center bg-stone-100 rounded-full h-9 px-1 shadow-inner border border-stone-200" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={(e) => adjustQuantity(e, -1)}
@@ -139,9 +163,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
                 <button
                   onClick={handleAddClick}
-                  disabled={!is_service && !hasVariants && (product.attributes.stock || 0) <= 0}
+                  disabled={isOutOfStock}
                   className={`h-10 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 
-                    ${(!is_service && !hasVariants && (product.attributes.stock || 0) <= 0)
+                    ${isOutOfStock
                       ? 'bg-stone-300 text-stone-500 cursor-not-allowed px-4 w-auto'
                       : is_service
                         ? 'w-10 bg-ocean-500 text-white hover:bg-ocean-600'
@@ -150,7 +174,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   `}
                   aria-label="Aggiungi al carrello"
                 >
-                  {(!is_service && !hasVariants && (product.attributes.stock || 0) <= 0) ? (
+                  {isOutOfStock ? (
                     <span className="text-xs font-bold uppercase">Esaurito</span>
                   ) : hasVariants ? (
                     <>Scegli <ChevronRight size={14} className="ml-1" /></>

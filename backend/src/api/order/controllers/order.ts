@@ -75,9 +75,16 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
                 let productName = item.name;
 
                 if (item.variant_id) {
-                    // Check Variant Stock
-                    const variant = await strapi.entityService.findOne('api::product-variant.product-variant', item.variant_id);
+                    // Check Variant Stock (Component)
+                    const product = await strapi.entityService.findOne('api::product.product', item.id, {
+                        populate: ['varianti']
+                    }) as any;
+
+                    if (!product) throw new Error(`Prodotto non trovato: ${item.name}`);
+
+                    const variant = product.varianti?.find((v: any) => v.id === item.variant_id);
                     if (!variant) throw new Error(`Variante non trovata: ${item.variant} (${item.name})`);
+
                     availableStock = variant.stock ?? 0;
                     productName = `${item.name} (${item.variant})`;
                 } else {
@@ -189,14 +196,27 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
 
                             try {
                                 if (item.variant_id) {
-                                    // Decrement Variant
-                                    const variant = await strapi.entityService.findOne('api::product-variant.product-variant', item.variant_id);
-                                    if (variant) {
-                                        const newStock = Math.max(0, (variant.stock || 0) - item.quantity);
-                                        await strapi.entityService.update('api::product-variant.product-variant', item.variant_id, {
-                                            data: { stock: newStock }
+                                    // Decrement Variant (Component)
+                                    // 1. Fetch Product with Variants
+                                    const product = await strapi.entityService.findOne('api::product.product', item.id, {
+                                        populate: ['varianti']
+                                    }) as any;
+
+                                    if (product && product.varianti) {
+                                        // 2. Find and Update Variant in the array
+                                        const updatedVariants = product.varianti.map((v: any) => {
+                                            if (v.id === item.variant_id) {
+                                                const newStock = Math.max(0, (v.stock || 0) - item.quantity);
+                                                console.log(`Decremented stock for variant ${v.id}: ${v.stock} -> ${newStock}`);
+                                                return { ...v, stock: newStock };
+                                            }
+                                            return v;
                                         });
-                                        console.log(`Decremented stock for variant ${variant.id}: ${variant.stock} -> ${newStock}`);
+
+                                        // 3. Save the updated component list back to the product
+                                        await strapi.entityService.update('api::product.product', item.id, {
+                                            data: { varianti: updatedVariants }
+                                        });
                                     }
                                 } else {
                                     // Decrement Product

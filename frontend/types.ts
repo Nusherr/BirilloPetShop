@@ -27,15 +27,13 @@ export interface AnimalData {
 // Product Variant Interface
 export interface ProductVariant {
   id: number;
-  attributes: {
-    nome_variante: string;
-    prezzo_aggiuntivo: number;
-    peso_kg?: number;
-    prezzo_scontato?: number;
-    opzioni?: Record<string, any>;
-    stock?: number;
-    barcode?: string;
-  }
+  nome_variante: string;
+  prezzo: number;
+  peso_kg?: number;
+  prezzo_scontato?: number;
+  opzioni?: Record<string, any>;
+  stock?: number;
+  barcode?: string;
 }
 
 // Product Interface
@@ -53,7 +51,7 @@ export interface Product {
     is_featured?: boolean;
     immagine: string;
     galleria?: string[];
-    variants?: ProductVariant[];
+    varianti?: ProductVariant[];
     stock?: number;
     barcode?: string;
   }

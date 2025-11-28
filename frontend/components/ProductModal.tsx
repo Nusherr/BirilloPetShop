@@ -25,8 +25,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
       setQuantity(1);
       setCurrentImageIndex(0); // Start from main image
       // Auto-select first variant if available
-      if (product.attributes.variants && product.attributes.variants.length > 0) {
-        setSelectedVariant(product.attributes.variants[0]);
+      if (product.attributes.varianti && product.attributes.varianti.length > 0) {
+        setSelectedVariant(product.attributes.varianti[0]);
       } else {
         setSelectedVariant(undefined);
       }
@@ -61,23 +61,27 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   const effectiveBasePrice = salePrice || basePrice;
 
   // Variant Price Logic
-  // If variant has a discount price, use it. Otherwise use standard price.
-  // We assume if Base Price is 0, these are absolute prices.
-  const variantPrice = selectedVariant ? (selectedVariant.attributes.prezzo_aggiuntivo) : 0;
-  const variantDiscountPrice = selectedVariant?.attributes.prezzo_scontato;
+  // Now using FULL PRICE from variant component
+  const variantPrice = selectedVariant ? selectedVariant.prezzo : 0;
+  const variantDiscountPrice = selectedVariant?.prezzo_scontato;
 
   // Final Price Calculation
-  // If variant is selected and has a discount, that overrides the standard calculation
-  let finalPrice = effectiveBasePrice + variantPrice;
+  // If variant is selected, use its price. Otherwise use product price.
+  let finalPrice = selectedVariant ? variantPrice : effectiveBasePrice;
   let isVariantOnSale = false;
 
   if (selectedVariant && variantDiscountPrice) {
-    // If variant has specific discount price, use that + base (usually 0)
-    finalPrice = effectiveBasePrice + variantDiscountPrice;
+    // If variant has specific discount price, use that
+    finalPrice = variantDiscountPrice;
     isVariantOnSale = true;
   }
 
-  const isOnSale = (salePrice && salePrice < basePrice) || isVariantOnSale;
+  // Determine if showing sale UI
+  // If variant selected: check if variant is on sale
+  // If no variant: check if product is on sale
+  const isOnSale = selectedVariant
+    ? (variantDiscountPrice && variantDiscountPrice < variantPrice)
+    : (salePrice && salePrice < basePrice);
 
   const handleAddToCart = () => {
     addToCart(product, quantity, selectedVariant);
@@ -174,20 +178,20 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                 </h2>
 
                 {/* Variants Selection */}
-                {product.attributes.variants && product.attributes.variants.length > 0 && (
+                {product.attributes.varianti && product.attributes.varianti.length > 0 && (
                   <div className="mb-4 p-4 bg-stone-50 rounded-2xl border border-stone-100">
                     <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">Scegli Formato</h3>
                     <div className="flex flex-wrap gap-3">
-                      {product.attributes.variants.map((variant) => (
+                      {product.attributes.varianti.map((variant) => (
                         <button
                           key={variant.id}
-                          onClick={() => setSelectedVariant(prev => prev?.id === variant.id ? undefined : variant)}
+                          onClick={() => setSelectedVariant(variant)}
                           className={`px-4 py-3 rounded-xl text-sm font-bold border-2 transition-all flex items-center justify-center min-w-[80px] ${selectedVariant?.id === variant.id
                             ? 'border-nature-500 bg-white text-nature-700 shadow-md transform scale-105'
                             : 'border-transparent bg-white text-stone-600 hover:border-stone-200'
                             }`}
                         >
-                          {variant.attributes.nome_variante}
+                          {variant.nome_variante}
                         </button>
                       ))}
                     </div>
@@ -205,10 +209,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                         {isOnSale && (
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-stone-400 line-through font-medium">
-                              €{((basePrice + variantPrice) * quantity).toFixed(2)}
+                              €{((selectedVariant ? variantPrice : effectiveBasePrice) * quantity).toFixed(2)}
                             </span>
                             <span className="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                              -{Math.round((((basePrice + variantPrice) - finalPrice) / (basePrice + variantPrice)) * 100)}%
+                              -{Math.round((((selectedVariant ? variantPrice : effectiveBasePrice) - finalPrice) / (selectedVariant ? variantPrice : effectiveBasePrice)) * 100)}%
                             </span>
                           </div>
                         )}
@@ -220,9 +224,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                         </div>
 
                         {/* Price per Kg Calculation */}
-                        {selectedVariant?.attributes.peso_kg && (
+                        {selectedVariant?.peso_kg && (
                           <div className="text-sm text-stone-500 font-medium mt-1">
-                            €{(finalPrice / selectedVariant.attributes.peso_kg).toFixed(2)} / kg
+                            €{(finalPrice / selectedVariant.peso_kg).toFixed(2)} / kg
                           </div>
                         )}
                       </div>
